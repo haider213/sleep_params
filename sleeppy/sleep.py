@@ -287,6 +287,105 @@ class SleepPy:
                 )
                 df.to_hdf(self.sub_dst + dst, key="raw_geneactiv_data_24hr", mode="w")
         return
+    def split_days_empatica_csv(self):
+        
+        """
+        splits the emaptica data into 24 hours chunks defined from noon to noon
+        """
+         
+     
+        try:
+            os.mkdir(self.sub_dst + "/raw_days")  # set up output directory
+        except OSError:
+            pass
+        # load data and fix time_stamps
+        acc_path=self.src[0]
+        temp_path=self.src[1]
+        df_temp = pd.read_csv(temp_path)
+        df_temp["marker"] = "temp"
+        df_temp = df_temp.rename(columns={' temp': "value"})
+        
+        data_acc= pd.read_csv(acc_path)
+        df_accx=df_acc[['datetime', ' acc_x']]
+        df_accx["marker"] = "accx"
+        df_accx = df_accx.rename(columns={' acc_x': "value"})
+        df_participant =df_temp.append(df_accx)
+        df_accy=df_acc[['datetime', ' acc_y']]
+        df_accy["marker"] = "accy"
+        df_accy = df_accy.rename(columns={' acc_y': "value"})
+        df_participant =df_participant.append(df_accy)
+        df_accz=df_acc[['datetime', ' acc_z']]
+        df_accy["marker"] = "accz"
+        df_accz = df_accz.rename(columns={' acc_z': "value"})
+        df_participant =df_participant.append(df_accy)
+        
+        df_sensor_pivot =df_participant.pivot(index='datetime', columns=["marker"], values=["value"])
+        
+            
+            
+        data = pd.read_csv(
+            self.src,
+            index_col=0,
+            skiprows=100,
+            header=None,
+            names=["Time", "X", "Y", "Z", "LUX", "Button", "T"],
+            usecols=["Time", "X", "Y", "Z", "LUX", "T"],
+            dtype={
+                "Time": object,
+                "X": np.float64,
+                "Y": np.float64,
+                "Z": np.float64,
+                "LUX": np.int64,
+                "Button": bool,
+                "T": np.float64,
+            },
+            low_memory=False,
+        )
+        data.index = pd.to_datetime(data.index, format="%Y-%m-%d %H:%M:%S:%f").values
+
+        # remove any specified time periods from the beginning and end of the file
+        data = data.loc[
+            data.index[0]
+            + pd.Timedelta(self.start_buffer) : data.index[-1]
+            - pd.Timedelta(self.stop_buffer)
+        ]
+
+        # cut to defined start and end times if specified
+        if self.start_time and self.stop_time:
+            self.start_time = pd.to_datetime(
+                self.start_time, format="%Y-%m-%d %H:%M:%S:%f"
+            )
+            self.stop_time = pd.to_datetime(
+                self.stop_time, format="%Y-%m-%d %H:%M:%S:%f"
+            )
+            data = data.loc[self.start_time : self.stop_time]
+        elif self.start_time:
+            self.start_time = pd.to_datetime(
+                self.start_time, format="%Y-%m-%d %H:%M:%S:%f"
+            )
+            data = data.loc[self.start_time :]
+        elif self.stop_time:
+            self.stop_time = pd.to_datetime(
+                self.stop_time, format="%Y-%m-%d %H:%M:%S:%f"
+            )
+            data = data.loc[: self.stop_time]
+
+        # split data into days from noon to noon
+        days = data.groupby(pd.Grouper(level=0, freq="24h", base=12))
+
+        # iterate through days keeping track of the day
+        count = 0
+        for day in days:
+            # save each 24 hour day separately if there's enough data to analyze
+            df = day[1].copy()
+            available_hours = (len(df) / float(self.fs)) / 3600.0
+            if available_hours >= self.minimum_hours:
+                count += 1
+                dst = "/raw_days/{}_day_{}.h5".format(
+                    self.src_name, str(count).zfill(2)
+                )
+                df.to_hdf(self.sub_dst + dst, key="raw_geneactiv_data_24hr", mode="w")
+        return
 
     def split_days_geneactiv_bin(self):
         """
