@@ -66,7 +66,8 @@ class SleepPy:
 
     def __init__(
         self,
-        input_file,
+        input_files,
+        subject,
         results_directory,
         sampling_frequency,
         start_buffer="0s",
@@ -83,6 +84,7 @@ class SleepPy:
         clear_intermediate_data=False,
         aws_object=None,
         verbose=False,
+        device_type='empatica'
     ):
         """
         Class initialization.
