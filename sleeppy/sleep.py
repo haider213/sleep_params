@@ -110,12 +110,20 @@ class SleepPy:
         if aws_object is not None:
             self.src = aws_object
         else:
-            self.src = input_file  # save input location
-        self.extension = input_file.split(".")[-1]
+            if device_type == 'empatica':
+                self.extension=input_file[0].split(".")[-1]
+                self.src_name = input_file[0].split("/")[-1][0:-4]  # save naming convention
+                
+            else:
+                self.extension = input_file.split(".")[-1]
+                self.src_name = input_file.split("/")[-1][0:-4]  # save naming convention
+                
+            self.src = input_file  # save input location 
+        
         self.dst = results_directory  # save output location
-        self.src_name = input_file.split("/")[-1][0:-4]  # save naming convention
+        
         self.sub_dst = (
-            results_directory + "/" + self.src_name
+            results_directory + "/" + str(subject)
         )  # create output directory
         self.fs = sampling_frequency  # save sampling frequency
         self.window_size = 60  # define window size in seconds
@@ -137,6 +145,7 @@ class SleepPy:
         self.minimum_hours = minimum_hours
         self.clear = clear_intermediate_data
         self.verbose = verbose
+        self.device_type= device_type
         self.run()  # run the package
 
     def run(self):
@@ -155,7 +164,14 @@ class SleepPy:
             if ".bin" in self.src:
                 self.split_days_geneactiv_bin()
             elif ".csv" in self.src:
-                self.split_days_geneactiv_csv()
+                if self.device_type == 'geneactiv':
+                    self.split_days_geneactiv_csv()
+                elif self.device_type == 'empatica':
+                    self.split_days_empatica_csv()
+                    
+                    
+                
+                
         if self.run_config <= 1:
             # extract the activity index feature
             if self.verbose:
