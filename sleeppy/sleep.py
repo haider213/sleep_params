@@ -546,8 +546,8 @@ class SleepPy:
             df_wear = pd.DataFrame(df_std.copy()) * 0 + 1
             df_wear.columns = ["wear"]
             for i in range(len(df_wear)):
-                if df_range.ix[i] <= 1 or df_std.ix[i] <= 1:
-                    df_wear.ix[i] = 0
+                if df_range.iloc[i] <= 1 or df_std.iloc[i] <= 1:
+                    df_wear.iloc[i] = 0
 
             # save before rescoring
             df_wear.to_hdf(
@@ -870,7 +870,7 @@ class SleepPy:
         # calculate std for all windows
         while idx < len(df) - int(900 * self.fs):  # run until we reach the end
             xyz = (
-                df.ix[idx : idx + int(3600 * self.fs)].std().values
+                df.iloc[idx : idx + int(3600 * self.fs)].std().values
             )  # save std in x y and z
             rstd.append(
                 [df.index[idx], xyz[0], xyz[1], xyz[2]]
@@ -897,8 +897,8 @@ class SleepPy:
         # calculate range for all windows
         while idx < len(df) - int(900 * self.fs):  # run until we reach the end
             xyz = (
-                df.ix[idx : idx + int(3600 * self.fs)].max().values
-                - df.ix[idx : idx + int(3600 * self.fs)].min().values
+                df.iloc[idx : idx + int(3600 * self.fs)].max().values
+                - df.iloc[idx : idx + int(3600 * self.fs)].min().values
             )  # save range in x y z
             rr.append(
                 [df.index[idx], xyz[0], xyz[1], xyz[2]]
