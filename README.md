@@ -26,6 +26,13 @@ we suggest using a [virtual environment](https://packaging.python.org/guides/ins
 ```sh
 pip install sleeppy
 ```
+After installing sleeppy go to Sleep Analysis/running_on_data.py.
+
+*Note:* Please make sure you have downloaded the data from https://physionet.org/content/big-ideas-glycemic-wearable/1.1.1/ and modify the paths in the running_on_data.py
+
+```
+python running_on_data.py
+```
 
 It can also be installed from source:
 
